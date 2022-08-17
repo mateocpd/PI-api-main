@@ -3,13 +3,48 @@ const { Sequelize } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
 const {
-  DB_USER, DB_PASSWORD, DB_HOST, DB_NAME
+  DB_USER, DB_PASSWORD, DB_HOST,DB_NAME
 } = process.env;
 
-const sequelize = new Sequelize(`postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/${DB_NAME}`, {
-  logging: false, // set to console.log to see the raw SQL queries
-  native: false, // lets Sequelize know we can use pg-native for ~30% more speed
-});
+let sequelize =
+ process.env.NODE_ENV === "production"
+? new Sequelize({
+  database:DB_NAME,
+  dialect: "postgres",
+  host:DB_HOST,
+  port:"5432",
+  username:DB_USER,
+  password:DB_PASSWORD,
+
+
+  pool:{
+    max:3,
+    min:1,
+    idle:10000
+  },
+  dialectOptions:{
+    ssl:{
+      require:true,
+
+      rejectUnauthorized:false,
+    },
+    keepAlive: true,
+  },
+  ssl:true
+})
+:new Sequelize(
+  `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/pokemon`,
+  {logging:false, native: false}
+);
+// const {
+//   DB_USER, DB_PASSWORD, DB_HOST,
+// } = process.env;
+
+// const sequelize = new Sequelize(`postgres://mateo:yPJRT0yRv7e8q9Iy2DxioQ@free-tier14.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full&options=--cluster%3Dfluffy-cattle-4329`, {
+//   // const sequelize = new Sequelize(`postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/pokemon`, {
+//   logging: false, // set to console.log to see the raw SQL queries
+//   native: false, // lets Sequelize know we can use pg-native for ~30% more speed
+// });
 const basename = path.basename(__filename);
 
 const modelDefiners = [];
